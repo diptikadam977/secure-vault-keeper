@@ -14,7 +14,68 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      encrypted_files: {
+        Row: {
+          created_at: string
+          encrypted_data: string
+          encrypted_key: string
+          file_name: string
+          file_size: number
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_data: string
+          encrypted_key: string
+          file_name: string
+          file_size: number
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_data?: string
+          encrypted_key?: string
+          file_name?: string
+          file_size?: number
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      file_shares: {
+        Row: {
+          created_at: string
+          file_id: string
+          id: string
+          shared_by: string
+          shared_with_email: string
+        }
+        Insert: {
+          created_at?: string
+          file_id: string
+          id?: string
+          shared_by: string
+          shared_with_email: string
+        }
+        Update: {
+          created_at?: string
+          file_id?: string
+          id?: string
+          shared_by?: string
+          shared_with_email?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "file_shares_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "encrypted_files"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

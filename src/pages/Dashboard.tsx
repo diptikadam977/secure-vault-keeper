@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Shield, LogOut } from "lucide-react";
 import { FileEncryptor } from "@/components/dashboard/FileEncryptor";
 import { FileDecryptor } from "@/components/dashboard/FileDecryptor";
+import { FileUploader } from "@/components/dashboard/FileUploader";
+import { MyFiles } from "@/components/dashboard/MyFiles";
+import { SharedWithMe } from "@/components/dashboard/SharedWithMe";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
 
@@ -83,28 +87,48 @@ const Dashboard = () => {
       </header>
 
       <main className="container mx-auto px-6 py-12">
-        <div className="max-w-5xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h2 className="text-3xl font-bold mb-2">File Encryption Dashboard</h2>
             <p className="text-muted-foreground">
-              Securely encrypt and decrypt your files with AES-256-GCM encryption
+              Securely encrypt, store, and share your files with AES-256-GCM encryption
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <FileEncryptor />
-            <FileDecryptor />
-          </div>
+          <Tabs defaultValue="tools" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="tools">Encryption Tools</TabsTrigger>
+              <TabsTrigger value="myfiles">My Files</TabsTrigger>
+              <TabsTrigger value="shared">Shared With Me</TabsTrigger>
+            </TabsList>
 
-          <div className="mt-8 p-6 bg-card rounded-2xl shadow-card">
-            <h3 className="text-lg font-semibold mb-3">Security Information</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• All encryption happens in your browser - files never leave your device unencrypted</li>
-              <li>• Uses AES-256-GCM, a military-grade encryption standard</li>
-              <li>• Keys are generated using cryptographically secure random numbers</li>
-              <li>• Store your encryption keys safely - we cannot recover them if lost</li>
-            </ul>
-          </div>
+            <TabsContent value="tools" className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <FileUploader />
+                <FileEncryptor />
+              </div>
+              <FileDecryptor />
+              
+              <div className="p-6 bg-card rounded-2xl shadow-card border border-border">
+                <h3 className="text-lg font-semibold mb-3">Security Information</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• All encryption happens in your browser - files never leave your device unencrypted</li>
+                  <li>• Uses AES-256-GCM, a military-grade encryption standard</li>
+                  <li>• Keys are generated using cryptographically secure random numbers</li>
+                  <li>• Store your encryption keys safely - we cannot recover them if lost</li>
+                  <li>• Share encrypted files securely with other users via email</li>
+                </ul>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="myfiles">
+              <MyFiles />
+            </TabsContent>
+
+            <TabsContent value="shared">
+              <SharedWithMe />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
