@@ -5,6 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Upload, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  generateAESKey,
+  exportAESKey,
+  encryptWithAES,
+  importPublicKey,
+  encryptKeyWithRSA,
+  getPrivateKey,
+} from "@/lib/crypto";
 
 export const FileUploader = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -22,30 +30,40 @@ export const FileUploader = () => {
 
     setLoading(true);
     try {
-      // Generate encryption key
-      const key = await window.crypto.subtle.generateKey(
-        { name: "AES-GCM", length: 256 },
-        true,
-        ["encrypt", "decrypt"]
-      );
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Not authenticated");
 
-      // Export key
-      const exportedKey = await window.crypto.subtle.exportKey("raw", key);
-      const keyBase64 = btoa(String.fromCharCode(...new Uint8Array(exportedKey)));
+      // Check if user has keys set up
+      const privateKey = getPrivateKey(userData.user.id);
+      if (!privateKey) {
+        toast.error("Please generate your encryption keys first");
+        setLoading(false);
+        return;
+      }
+
+      // Get user's public key from database
+      const { data: userKeys, error: keyError } = await supabase
+        .from("user_keys")
+        .select("public_key")
+        .eq("user_id", userData.user.id)
+        .single();
+
+      if (keyError || !userKeys) {
+        toast.error("Could not retrieve your public key");
+        setLoading(false);
+        return;
+      }
+
+      // Generate AES symmetric key for file encryption
+      const aesKey = await generateAESKey();
+      const aesKeyBuffer = await exportAESKey(aesKey);
 
       // Read file
       const arrayBuffer = await file.arrayBuffer();
       const data = new Uint8Array(arrayBuffer);
 
-      // Generate IV
-      const iv = window.crypto.getRandomValues(new Uint8Array(12));
-
-      // Encrypt
-      const encryptedData = await window.crypto.subtle.encrypt(
-        { name: "AES-GCM", iv },
-        key,
-        data
-      );
+      // Encrypt file with AES
+      const { encryptedData, iv } = await encryptWithAES(data, aesKey);
 
       // Combine IV and encrypted data
       const combined = new Uint8Array(iv.length + encryptedData.byteLength);
@@ -55,15 +73,16 @@ export const FileUploader = () => {
       // Convert to base64
       const encryptedBase64 = btoa(String.fromCharCode(...combined));
 
-      // Save to database
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Not authenticated");
+      // Encrypt AES key with user's public RSA key
+      const publicKey = await importPublicKey(userKeys.public_key);
+      const encryptedAESKey = await encryptKeyWithRSA(aesKeyBuffer, publicKey);
 
+      // Save to database
       const { error } = await supabase.from("encrypted_files").insert({
         user_id: userData.user.id,
         file_name: file.name,
         file_size: file.size,
-        encrypted_key: keyBase64,
+        encrypted_key: encryptedAESKey, // AES key encrypted with RSA
         encrypted_data: encryptedBase64,
       });
 

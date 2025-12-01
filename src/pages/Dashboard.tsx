@@ -8,6 +8,7 @@ import { FileDecryptor } from "@/components/dashboard/FileDecryptor";
 import { FileUploader } from "@/components/dashboard/FileUploader";
 import { MyFiles } from "@/components/dashboard/MyFiles";
 import { SharedWithMe } from "@/components/dashboard/SharedWithMe";
+import { KeyManager } from "@/components/dashboard/KeyManager";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import type { User } from "@supabase/supabase-js";
@@ -103,6 +104,8 @@ const Dashboard = () => {
             </TabsList>
 
             <TabsContent value="tools" className="space-y-6">
+              <KeyManager />
+              
               <div className="grid md:grid-cols-2 gap-6">
                 <FileUploader />
                 <FileEncryptor />
@@ -112,11 +115,11 @@ const Dashboard = () => {
               <div className="p-6 bg-card rounded-2xl shadow-card border border-border">
                 <h3 className="text-lg font-semibold mb-3">Security Information</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• All encryption happens in your browser - files never leave your device unencrypted</li>
-                  <li>• Uses AES-256-GCM, a military-grade encryption standard</li>
-                  <li>• Keys are generated using cryptographically secure random numbers</li>
-                  <li>• Store your encryption keys safely - we cannot recover them if lost</li>
-                  <li>• Share encrypted files securely with other users via email</li>
+                  <li>• Uses RSA-2048 + AES-256-GCM hybrid encryption</li>
+                  <li>• Your private key never leaves your device</li>
+                  <li>• Each user has unique encryption keys</li>
+                  <li>• Files are encrypted with recipient-specific keys when shared</li>
+                  <li>• Zero-knowledge architecture - we cannot decrypt your files</li>
                 </ul>
               </div>
             </TabsContent>

@@ -1,14 +1,22 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Users } from "lucide-react";
+import { Download, Loader2, FileText, Users } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  importPrivateKey,
+  getPrivateKey,
+  decryptKeyWithRSA,
+  importAESKey,
+  decryptWithAES,
+} from "@/lib/crypto";
 
 interface SharedFile {
   id: string;
   file_id: string;
   shared_by: string;
+  encrypted_key: string | null;
   created_at: string;
   encrypted_files: {
     file_name: string;
@@ -53,54 +61,78 @@ export const SharedWithMe = () => {
 
   const downloadSharedFile = async (file: SharedFile) => {
     try {
-      const fileData = file.encrypted_files;
-      
-      // Decode base64 encrypted data
-      const encryptedBytes = Uint8Array.from(atob(fileData.encrypted_data), c => c.charCodeAt(0));
-      
-      // Extract IV and encrypted content
-      const iv = encryptedBytes.slice(0, 12);
-      const encryptedContent = encryptedBytes.slice(12);
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Not authenticated");
 
-      // Import key
-      const keyData = Uint8Array.from(atob(fileData.encrypted_key), c => c.charCodeAt(0));
-      const key = await window.crypto.subtle.importKey(
-        "raw",
-        keyData,
-        { name: "AES-GCM", length: 256 },
-        false,
-        ["decrypt"]
-      );
+      // Get private key from localStorage
+      const privateKeyBase64 = getPrivateKey(userData.user.id);
+      if (!privateKeyBase64) {
+        toast.error("Private key not found. Please generate your keys.");
+        return;
+      }
 
-      // Decrypt
-      const decrypted = await window.crypto.subtle.decrypt(
-        { name: "AES-GCM", iv },
-        key,
-        encryptedContent
-      );
+      // Check if we have encrypted_key in the share (new system)
+      if (file.encrypted_key) {
+        // New system: Use RSA-encrypted key from file_shares
+        const privateKey = await importPrivateKey(privateKeyBase64);
+        const aesKeyBuffer = await decryptKeyWithRSA(file.encrypted_key, privateKey);
+        const aesKey = await importAESKey(aesKeyBuffer);
 
-      // Download
-      const blob = new Blob([decrypted]);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = fileData.file_name;
-      a.click();
-      URL.revokeObjectURL(url);
+        // Decode base64 encrypted data
+        const encryptedBinary = atob(file.encrypted_files.encrypted_data);
+        const encryptedBytes = new Uint8Array(encryptedBinary.length);
+        for (let i = 0; i < encryptedBinary.length; i++) {
+          encryptedBytes[i] = encryptedBinary.charCodeAt(i);
+        }
 
-      toast.success("File downloaded successfully!");
+        // Extract IV and encrypted data
+        const iv = encryptedBytes.slice(0, 12);
+        const data = encryptedBytes.slice(12);
+
+        // Decrypt file with AES
+        const decryptedData = await decryptWithAES(data.buffer, aesKey, iv);
+
+        // Create and download file
+        const blob = new Blob([decryptedData]);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = file.encrypted_files.file_name;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        toast.success("File decrypted and downloaded!");
+      } else {
+        toast.error("This file was shared before the key exchange system was set up. Please ask the owner to re-share it.");
+      }
     } catch (error) {
       console.error("Download error:", error);
-      toast.error("Failed to download file");
+      toast.error("Failed to decrypt file");
     }
   };
 
   if (loading) {
     return (
       <Card className="bg-card shadow-card border-border">
-        <CardContent className="py-8">
-          <p className="text-center text-muted-foreground">Loading shared files...</p>
+        <CardContent className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </CardContent>
+      </Card>
+    );
+  }
+
+  if (sharedFiles.length === 0) {
+    return (
+      <Card className="bg-card shadow-card border-border">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            Shared With Me
+          </CardTitle>
+          <CardDescription>No files shared with you yet</CardDescription>
+        </CardHeader>
       </Card>
     );
   }
@@ -113,41 +145,34 @@ export const SharedWithMe = () => {
           Shared With Me
         </CardTitle>
         <CardDescription>
-          Files that others have shared with you
+          {sharedFiles.length} file{sharedFiles.length !== 1 ? "s" : ""} shared with you
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {sharedFiles.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            No files shared with you yet
-          </p>
-        ) : (
-          <div className="space-y-3">
-            {sharedFiles.map((share) => (
-              <div
-                key={share.id}
-                className="flex items-center justify-between p-4 rounded-lg bg-background border border-border hover:border-primary/50 transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">
-                    {share.encrypted_files.file_name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {(share.encrypted_files.file_size / 1024).toFixed(2)} KB • Shared {new Date(share.created_at).toLocaleDateString()}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => downloadSharedFile(share)}
-                >
-                  <Download className="w-4 h-4" />
-                  Download
-                </Button>
+        <div className="space-y-3">
+          {sharedFiles.map((file) => (
+            <div
+              key={file.id}
+              className="flex items-center justify-between p-4 rounded-lg border border-border bg-background/50 hover:bg-background/80 transition-colors"
+            >
+              <div className="flex-1">
+                <p className="font-medium">{file.encrypted_files.file_name}</p>
+                <p className="text-sm text-muted-foreground">
+                  {(file.encrypted_files.file_size / 1024).toFixed(2)} KB •{" "}
+                  Shared {new Date(file.created_at).toLocaleDateString()}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => downloadSharedFile(file)}
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </Button>
+            </div>
+          ))}
+        </div>
       </CardContent>
     </Card>
   );

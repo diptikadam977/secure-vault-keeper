@@ -47,6 +47,7 @@ export type Database = {
       file_shares: {
         Row: {
           created_at: string
+          encrypted_key: string | null
           file_id: string
           id: string
           shared_by: string
@@ -54,6 +55,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          encrypted_key?: string | null
           file_id: string
           id?: string
           shared_by: string
@@ -61,6 +63,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          encrypted_key?: string | null
           file_id?: string
           id?: string
           shared_by?: string
@@ -75,6 +78,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_keys: {
+        Row: {
+          created_at: string
+          id: string
+          public_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          public_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          public_key?: string
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
