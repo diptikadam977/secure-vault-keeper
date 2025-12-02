@@ -69,9 +69,15 @@ export const FileUploader = () => {
       const combined = new Uint8Array(iv.length + encryptedData.byteLength);
       combined.set(iv);
       combined.set(new Uint8Array(encryptedData), iv.length);
-      
-      // Convert to base64
-      const encryptedBase64 = btoa(String.fromCharCode(...combined));
+
+      // Convert to base64 safely for large files by processing in chunks
+      let binary = "";
+      const chunkSize = 0x8000; // 32KB per chunk to avoid call stack limits
+      for (let i = 0; i < combined.length; i += chunkSize) {
+        const chunk = combined.subarray(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      const encryptedBase64 = btoa(binary);
 
       // Encrypt AES key with user's public RSA key
       const publicKey = await importPublicKey(userKeys.public_key);
