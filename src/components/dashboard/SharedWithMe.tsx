@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Download, Loader2, FileText, Users } from "lucide-react";
+import { Download, Loader2, FileText, Users, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -18,6 +19,7 @@ interface SharedFile {
   shared_by: string;
   encrypted_key: string | null;
   created_at: string;
+  expires_at: string | null;
   encrypted_files: {
     file_name: string;
     file_size: number;
@@ -156,7 +158,15 @@ export const SharedWithMe = () => {
               className="flex items-center justify-between p-4 rounded-lg border border-border bg-background/50 hover:bg-background/80 transition-colors"
             >
               <div className="flex-1">
-                <p className="font-medium">{file.encrypted_files.file_name}</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-medium">{file.encrypted_files.file_name}</p>
+                  {file.expires_at && (
+                    <Badge variant="outline" className="text-xs flex items-center gap-1">
+                      <Clock className="w-3 h-3" />
+                      Expires {new Date(file.expires_at).toLocaleDateString()}
+                    </Badge>
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground">
                   {(file.encrypted_files.file_size / 1024).toFixed(2)} KB •{" "}
                   Shared {new Date(file.created_at).toLocaleDateString()}

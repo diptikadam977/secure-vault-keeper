@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { Download, Share2, Trash2, Loader2, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +32,7 @@ export const MyFiles = () => {
   const [files, setFiles] = useState<EncryptedFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [shareEmail, setShareEmail] = useState("");
+  const [expirationTime, setExpirationTime] = useState<string>("24h");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [currentFileId, setCurrentFileId] = useState<string | null>(null);
 
@@ -138,6 +141,18 @@ export const MyFiles = () => {
       const privateKey = await importPrivateKey(privateKeyBase64);
       const aesKeyBuffer = await decryptKeyWithRSA(fileData.encrypted_key, privateKey);
 
+      // Calculate expiration timestamp based on selection
+      const now = new Date();
+      let expiresAt: string | null = null;
+      
+      if (expirationTime === "24h") {
+        expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString();
+      } else if (expirationTime === "7d") {
+        expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      } else if (expirationTime === "30d") {
+        expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      }
+
       // Get recipient's public key - simplified version (in production, you'd look up by email)
       // For now, just insert without re-encryption (recipient will need keys)
       const { error: shareError } = await supabase.from("file_shares").insert({
@@ -145,12 +160,17 @@ export const MyFiles = () => {
         shared_by: userData.user.id,
         shared_with_email: shareEmail,
         encrypted_key: null, // Will be updated when recipient has keys
+        expires_at: expiresAt,
       });
 
       if (shareError) throw shareError;
 
-      toast.success(`File shared with ${shareEmail}!`);
+      const expirationMessage = expirationTime === "never" 
+        ? "" 
+        : ` (expires in ${expirationTime === "24h" ? "24 hours" : expirationTime === "7d" ? "7 days" : "30 days"})`;
+      toast.success(`File shared with ${shareEmail}${expirationMessage}!`);
       setShareEmail("");
+      setExpirationTime("24h");
       setShareDialogOpen(false);
       setCurrentFileId(null);
     } catch (error) {
@@ -236,6 +256,7 @@ export const MyFiles = () => {
                   } else {
                     setCurrentFileId(null);
                     setShareEmail("");
+                    setExpirationTime("24h");
                   }
                 }}>
                   <DialogTrigger asChild>
@@ -247,16 +268,34 @@ export const MyFiles = () => {
                     <DialogHeader>
                       <DialogTitle>Share File</DialogTitle>
                       <DialogDescription>
-                        Enter the email address of the person you want to share this file with
+                        Enter the email address and set an expiration time for this share
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
-                      <Input
-                        type="email"
-                        placeholder="recipient@example.com"
-                        value={shareEmail}
-                        onChange={(e) => setShareEmail(e.target.value)}
-                      />
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="recipient@example.com"
+                          value={shareEmail}
+                          onChange={(e) => setShareEmail(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="expiration">Expiration Time</Label>
+                        <Select value={expirationTime} onValueChange={setExpirationTime}>
+                          <SelectTrigger id="expiration">
+                            <SelectValue placeholder="Select expiration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="24h">24 Hours</SelectItem>
+                            <SelectItem value="7d">7 Days</SelectItem>
+                            <SelectItem value="30d">30 Days</SelectItem>
+                            <SelectItem value="never">Never Expires</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                       <Button
                         onClick={() => shareFile(file.id)}
                         className="w-full"

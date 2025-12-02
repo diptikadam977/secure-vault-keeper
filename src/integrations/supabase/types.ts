@@ -48,6 +48,7 @@ export type Database = {
         Row: {
           created_at: string
           encrypted_key: string | null
+          expires_at: string | null
           file_id: string
           id: string
           shared_by: string
@@ -56,6 +57,7 @@ export type Database = {
         Insert: {
           created_at?: string
           encrypted_key?: string | null
+          expires_at?: string | null
           file_id: string
           id?: string
           shared_by: string
@@ -64,6 +66,7 @@ export type Database = {
         Update: {
           created_at?: string
           encrypted_key?: string | null
+          expires_at?: string | null
           file_id?: string
           id?: string
           shared_by?: string
