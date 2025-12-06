@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, Loader2, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export const AuthForm = () => {
   const navigate = useNavigate();
@@ -118,7 +119,10 @@ export const AuthForm = () => {
 
   if (showResetPassword) {
     return (
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6 relative">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl shadow-glow mb-4">
@@ -174,7 +178,10 @@ export const AuthForm = () => {
 
   if (showForgotPassword) {
     return (
-      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6 relative">
+        <div className="absolute top-4 right-4">
+          <ThemeToggle />
+        </div>
         <div className="w-full max-w-md">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl shadow-glow mb-4">
@@ -237,7 +244,10 @@ export const AuthForm = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gradient-hero flex items-center justify-center p-6 relative">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-primary rounded-2xl shadow-glow mb-4">

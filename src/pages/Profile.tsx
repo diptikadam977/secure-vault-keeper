@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Shield, ArrowLeft, Camera, Loader2 } from 'lucide-react';
 import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useProfile } from '@/hooks/useProfile';
 import { toast } from 'sonner';
 import type { User } from '@supabase/supabase-js';
@@ -82,19 +83,22 @@ const Profile = () => {
     <div className="min-h-screen bg-gradient-hero">
       <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">SecureVault</h1>
-                <p className="text-xs text-muted-foreground">Profile Settings</p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/dashboard')}>
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
+                  <Shield className="w-5 h-5 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold">SecureVault</h1>
+                  <p className="text-xs text-muted-foreground">Profile Settings</p>
+                </div>
               </div>
             </div>
+            <ThemeToggle />
           </div>
         </div>
       </header>
