@@ -10,6 +10,7 @@ import { MyFiles } from "@/components/dashboard/MyFiles";
 import { SharedWithMe } from "@/components/dashboard/SharedWithMe";
 import { KeyManager } from "@/components/dashboard/KeyManager";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useProfile } from "@/hooks/useProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -79,6 +80,7 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <ThemeToggle />
               <button
                 onClick={() => navigate('/profile')}
                 className="flex items-center gap-2 hover:opacity-80 transition-opacity"
