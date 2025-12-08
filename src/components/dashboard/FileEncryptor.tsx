@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Progress } from "@/components/ui/progress";
 import { Upload, Lock, Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -10,6 +11,7 @@ export const FileEncryptor = () => {
   const [file, setFile] = useState<File | null>(null);
   const [encryptionKey, setEncryptionKey] = useState("");
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   const generateKey = () => {
     const array = new Uint8Array(32);
@@ -33,9 +35,16 @@ export const FileEncryptor = () => {
     }
 
     setLoading(true);
+    setProgress(0);
     try {
+      // Simulate progress for UX
+      const progressInterval = setInterval(() => {
+        setProgress(prev => Math.min(prev + 15, 85));
+      }, 150);
+
       // Read file as array buffer
       const arrayBuffer = await file.arrayBuffer();
+      setProgress(40);
       
       // Convert hex key to bytes
       const keyBytes = new Uint8Array(encryptionKey.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
@@ -52,12 +61,17 @@ export const FileEncryptor = () => {
       // Generate IV
       const iv = crypto.getRandomValues(new Uint8Array(12));
 
+      setProgress(60);
+      
       // Encrypt
       const encryptedData = await crypto.subtle.encrypt(
         { name: "AES-GCM", iv },
         cryptoKey,
         arrayBuffer
       );
+      
+      setProgress(90);
+      clearInterval(progressInterval);
 
       // Combine IV and encrypted data
       const combined = new Uint8Array(iv.length + encryptedData.byteLength);
@@ -72,13 +86,15 @@ export const FileEncryptor = () => {
       a.download = `${file.name}.encrypted`;
       a.click();
       URL.revokeObjectURL(url);
-
+      
+      setProgress(100);
       toast.success("File encrypted successfully!");
     } catch (error) {
       console.error("Encryption error:", error);
       toast.error("Failed to encrypt file");
     } finally {
       setLoading(false);
+      setTimeout(() => setProgress(0), 500);
     }
   };
 
@@ -142,10 +158,21 @@ export const FileEncryptor = () => {
           </p>
         </div>
 
+        {loading && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground animate-progress-pulse">Encrypting...</span>
+              <span className="font-mono text-primary">{progress}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+        )}
+
         <Button
           onClick={encryptFile}
           disabled={loading || !file || encryptionKey.length !== 64}
-          className="w-full bg-gradient-primary hover:shadow-glow transition-all duration-300"
+          className="w-full bg-gradient-primary btn-glow"
+          variant="glow"
         >
           {loading ? (
             <>

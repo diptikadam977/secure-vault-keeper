@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Key, Loader2, Shield, AlertTriangle } from "lucide-react";
+import { Key, Loader2, Shield, AlertTriangle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { generateKeyPair, exportKeys, storePrivateKey, getPrivateKey } from "@/lib/crypto";
@@ -11,6 +11,7 @@ export const KeyManager = () => {
   const [hasKeys, setHasKeys] = useState(false);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [showShake, setShowShake] = useState(false);
 
   useEffect(() => {
     checkForKeys();
@@ -41,6 +42,7 @@ export const KeyManager = () => {
 
   const generateKeys = async () => {
     setGenerating(true);
+    setShowShake(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
@@ -74,6 +76,7 @@ export const KeyManager = () => {
       toast.error("Failed to generate encryption keys");
     } finally {
       setGenerating(false);
+      setTimeout(() => setShowShake(false), 800);
     }
   };
 
@@ -145,12 +148,13 @@ export const KeyManager = () => {
         <Button
           onClick={generateKeys}
           disabled={generating}
-          className="w-full"
+          className="w-full btn-glow"
           size="lg"
+          variant="glow"
         >
           {generating ? (
             <>
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Lock className={`w-4 h-4 ${showShake ? 'animate-shake' : ''}`} />
               Generating Keys...
             </>
           ) : (
