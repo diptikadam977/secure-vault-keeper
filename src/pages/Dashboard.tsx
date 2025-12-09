@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Shield, LogOut, Settings } from "lucide-react";
+import { ShieldCheck, LogOut, Settings, Menu, X } from "lucide-react";
 import { FileEncryptor } from "@/components/dashboard/FileEncryptor";
 import { FileDecryptor } from "@/components/dashboard/FileDecryptor";
 import { FileUploader } from "@/components/dashboard/FileUploader";
@@ -21,6 +21,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { profile } = useProfile();
 
   useEffect(() => {
@@ -59,7 +60,7 @@ const Dashboard = () => {
     return (
       <div className="min-h-screen bg-gradient-hero flex items-center justify-center">
         <div className="text-center">
-          <Shield className="w-12 h-12 text-primary mx-auto mb-4 animate-pulse" />
+          <ShieldCheck className="w-12 h-12 text-foreground mx-auto mb-4 animate-pulse" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -68,19 +69,22 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-4">
+      <header className="border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-20">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary-foreground" />
+            {/* Logo */}
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 bg-foreground rounded-lg flex items-center justify-center">
+                <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-background" />
               </div>
-              <div>
-                <h1 className="text-xl font-bold">SecureVault</h1>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
+              <div className="hidden sm:block">
+                <h1 className="text-lg sm:text-xl font-bold text-foreground">SecureVault</h1>
+                <p className="text-xs text-muted-foreground truncate max-w-[150px]">{user?.email}</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-2 sm:gap-3">
               <ThemeToggle />
               <Button
                 variant="ghost"
@@ -104,45 +108,96 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 onClick={handleSignOut}
-                className="gap-2"
+                className="gap-2 border-foreground/20 hover:bg-foreground hover:text-background"
               >
                 <LogOut className="w-4 h-4" />
                 Sign Out
               </Button>
             </div>
+
+            {/* Mobile Menu Button */}
+            <div className="flex md:hidden items-center gap-2">
+              <ThemeToggle />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label="Menu"
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </div>
           </div>
+
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden border-t border-border mt-3 pt-3 pb-2 animate-page-in">
+              <div className="flex flex-col gap-2">
+                <p className="text-xs text-muted-foreground px-2 truncate">{user?.email}</p>
+                <Button
+                  variant="ghost"
+                  onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}
+                  className="justify-start gap-2"
+                >
+                  <ProfileAvatar
+                    avatarUrl={profile?.avatar_url ?? null}
+                    displayName={profile?.display_name ?? null}
+                    email={user?.email}
+                    size="sm"
+                  />
+                  Profile
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => { navigate('/settings'); setMobileMenuOpen(false); }}
+                  className="justify-start gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={handleSignOut}
+                  className="justify-start gap-2 text-destructive"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
-      <main className="container mx-auto px-6 py-12">
+      <main className="container mx-auto px-4 sm:px-6 py-6 sm:py-12">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold mb-2">File Encryption Dashboard</h2>
-            <p className="text-muted-foreground">
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-2 text-foreground">File Encryption Dashboard</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">
               Securely encrypt, store, and share your files with AES-256-GCM encryption
             </p>
           </div>
 
-          <Tabs defaultValue="tools" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="tools">Encryption Tools</TabsTrigger>
-              <TabsTrigger value="myfiles">My Files</TabsTrigger>
-              <TabsTrigger value="shares">Active Shares</TabsTrigger>
-              <TabsTrigger value="shared">Shared With Me</TabsTrigger>
+          <Tabs defaultValue="tools" className="space-y-4 sm:space-y-6">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+              <TabsTrigger value="tools" className="text-xs sm:text-sm py-2">Tools</TabsTrigger>
+              <TabsTrigger value="myfiles" className="text-xs sm:text-sm py-2">My Files</TabsTrigger>
+              <TabsTrigger value="shares" className="text-xs sm:text-sm py-2">Shares</TabsTrigger>
+              <TabsTrigger value="shared" className="text-xs sm:text-sm py-2">Shared</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="tools" className="space-y-6">
+            <TabsContent value="tools" className="space-y-4 sm:space-y-6">
               <KeyManager />
               
-              <div className="grid md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 <FileUploader />
                 <FileEncryptor />
               </div>
               <FileDecryptor />
               
-              <div className="p-6 bg-card rounded-2xl shadow-card border border-border">
-                <h3 className="text-lg font-semibold mb-3">Security Information</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
+              <div className="p-4 sm:p-6 bg-card rounded-2xl shadow-card border border-border">
+                <h3 className="text-base sm:text-lg font-semibold mb-3 text-foreground">Security Information</h3>
+                <ul className="space-y-2 text-xs sm:text-sm text-muted-foreground">
                   <li>• Uses RSA-2048 + AES-256-GCM hybrid encryption</li>
                   <li>• Your private key never leaves your device</li>
                   <li>• Each user has unique encryption keys</li>
