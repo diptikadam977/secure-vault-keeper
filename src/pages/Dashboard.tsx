@@ -7,7 +7,7 @@ import { FileEncryptor } from "@/components/dashboard/FileEncryptor";
 import { FileDecryptor } from "@/components/dashboard/FileDecryptor";
 import { FileUploader } from "@/components/dashboard/FileUploader";
 import { MyFiles } from "@/components/dashboard/MyFiles";
-import { SharedWithMe } from "@/components/dashboard/SharedWithMe";
+
 import { KeyManager } from "@/components/dashboard/KeyManager";
 import { ActiveShares } from "@/components/dashboard/ActiveShares";
 import { ProfileAvatar } from "@/components/profile/ProfileAvatar";
@@ -179,11 +179,10 @@ const Dashboard = () => {
           </div>
 
           <Tabs defaultValue="tools" className="space-y-4 sm:space-y-6">
-            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto gap-1">
+            <TabsList className="grid w-full grid-cols-3 h-auto gap-1">
               <TabsTrigger value="tools" className="text-xs sm:text-sm py-2">Tools</TabsTrigger>
               <TabsTrigger value="myfiles" className="text-xs sm:text-sm py-2">My Files</TabsTrigger>
               <TabsTrigger value="shares" className="text-xs sm:text-sm py-2">Shares</TabsTrigger>
-              <TabsTrigger value="shared" className="text-xs sm:text-sm py-2">Shared</TabsTrigger>
             </TabsList>
 
             <TabsContent value="tools" className="space-y-4 sm:space-y-6">
@@ -215,9 +214,6 @@ const Dashboard = () => {
               <ActiveShares />
             </TabsContent>
 
-            <TabsContent value="shared">
-              <SharedWithMe />
-            </TabsContent>
           </Tabs>
         </div>
       </main>
