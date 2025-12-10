@@ -3,7 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ShieldCheck, Download, Loader2, AlertCircle, Clock, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ShieldCheck, Download, Loader2, AlertCircle, Clock, FileText, Key } from "lucide-react";
 import { toast } from "sonner";
 import {
   importPrivateKey,
@@ -18,6 +20,7 @@ const DownloadShare = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
+  const [manualKey, setManualKey] = useState("");
   const [shareData, setShareData] = useState<{
     fileName: string;
     fileSize: number;
@@ -26,7 +29,7 @@ const DownloadShare = () => {
     isExpired: boolean;
     fileId: string;
     encryptedData: string;
-    encryptedKey: string;
+    encryptedKey: string | null;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
@@ -72,7 +75,7 @@ const DownloadShare = () => {
         isExpired,
         fileId: share.file_id,
         encryptedData: share.encrypted_files?.encrypted_data || "",
-        encryptedKey: share.encrypted_files?.encrypted_key || "",
+        encryptedKey: share.encrypted_files?.encrypted_key || null,
       });
     } catch (error) {
       console.error("Error loading share:", error);
@@ -82,8 +85,66 @@ const DownloadShare = () => {
     }
   };
 
-  const handleDownload = async () => {
-    if (!shareData || !user) return;
+  const handleDownloadWithKey = async () => {
+    if (!shareData || !manualKey || manualKey.length !== 64) {
+      toast.error("Please enter a valid 64-character decryption key");
+      return;
+    }
+
+    setDownloading(true);
+    try {
+      // Convert hex key to bytes
+      const keyBytes = new Uint8Array(manualKey.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+
+      // Import key for AES-GCM
+      const cryptoKey = await crypto.subtle.importKey(
+        "raw",
+        keyBytes,
+        { name: "AES-GCM" },
+        false,
+        ["decrypt"]
+      );
+
+      // Decode base64 encrypted data
+      const encryptedBinary = atob(shareData.encryptedData);
+      const encryptedBytes = new Uint8Array(encryptedBinary.length);
+      for (let i = 0; i < encryptedBinary.length; i++) {
+        encryptedBytes[i] = encryptedBinary.charCodeAt(i);
+      }
+
+      // Extract IV and encrypted data
+      const iv = encryptedBytes.slice(0, 12);
+      const data = encryptedBytes.slice(12);
+
+      // Decrypt
+      const decryptedData = await crypto.subtle.decrypt(
+        { name: "AES-GCM", iv },
+        cryptoKey,
+        data
+      );
+
+      // Create and download file
+      const blob = new Blob([decryptedData]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = shareData.fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("File decrypted and downloaded!");
+    } catch (error) {
+      console.error("Download error:", error);
+      toast.error("Failed to decrypt file. Check your key and try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleDownloadWithPrivateKey = async () => {
+    if (!shareData || !user || !shareData.encryptedKey) return;
 
     setDownloading(true);
     try {
@@ -225,37 +286,46 @@ const DownloadShare = () => {
             )}
           </div>
 
-          {!user ? (
-            <div className="text-center space-y-4">
-              <p className="text-sm text-muted-foreground">
-                Please log in to download this file
-              </p>
-              <Button onClick={() => navigate("/auth")} className="w-full">
-                Log In to Download
-              </Button>
-            </div>
-          ) : (
-            <Button
-              onClick={handleDownload}
-              disabled={downloading}
-              className="w-full gap-2"
-            >
-              {downloading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Decrypting...
-                </>
-              ) : (
-                <>
-                  <Download className="w-4 h-4" />
-                  Download & Decrypt
-                </>
-              )}
-            </Button>
-          )}
+          {/* Manual key input for decryption */}
+          <div className="space-y-3">
+            <Label htmlFor="decryption-key" className="flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              Decryption Key
+            </Label>
+            <Input
+              id="decryption-key"
+              type="text"
+              value={manualKey}
+              onChange={(e) => setManualKey(e.target.value)}
+              placeholder="Enter 64-character hex key"
+              className="font-mono text-sm"
+              maxLength={64}
+            />
+            <p className="text-xs text-muted-foreground">
+              Ask the file owner for the decryption key
+            </p>
+          </div>
+
+          <Button
+            onClick={handleDownloadWithKey}
+            disabled={downloading || manualKey.length !== 64}
+            className="w-full gap-2"
+          >
+            {downloading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Decrypting...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                Download & Decrypt
+              </>
+            )}
+          </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            This file is encrypted with AES-256-GCM encryption. Only authorized users can decrypt it.
+            This file is encrypted with AES-256-GCM encryption. You need the correct key to decrypt it.
           </p>
         </CardContent>
       </Card>
