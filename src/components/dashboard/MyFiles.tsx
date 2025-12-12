@@ -36,6 +36,7 @@ export const MyFiles = () => {
   const [generatedShareId, setGeneratedShareId] = useState<string | null>(null);
   const [currentFileName, setCurrentFileName] = useState<string>("");
   const [currentExpiresAt, setCurrentExpiresAt] = useState<string | null>(null);
+  const [currentEncryptionKey, setCurrentEncryptionKey] = useState<string>("");
   const [sharing, setSharing] = useState(false);
 
   useEffect(() => {
@@ -110,11 +111,26 @@ export const MyFiles = () => {
     }
   };
 
-  const shareFile = async (fileId: string, fileName: string) => {
+  const shareFile = async (fileId: string, fileName: string, encryptedKey: string) => {
     setSharing(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
+
+      // Get private key and decrypt the AES key to share
+      const privateKeyBase64 = getPrivateKey(userData.user.id);
+      if (!privateKeyBase64) {
+        toast.error("Private key not found. Please generate your keys.");
+        setSharing(false);
+        return;
+      }
+
+      const privateKey = await importPrivateKey(privateKeyBase64);
+      const aesKeyBuffer = await decryptKeyWithRSA(encryptedKey, privateKey);
+      
+      // Convert AES key to hex string for sharing
+      const keyArray = new Uint8Array(aesKeyBuffer);
+      const hexKey = Array.from(keyArray).map(b => b.toString(16).padStart(2, '0')).join('');
 
       // Calculate expiration timestamp based on selection
       const now = new Date();
@@ -143,6 +159,7 @@ export const MyFiles = () => {
       setGeneratedShareId(shareData.id);
       setCurrentFileName(fileName);
       setCurrentExpiresAt(expiresAt);
+      setCurrentEncryptionKey(hexKey);
 
       toast.success("Share link & QR code generated!");
     } catch (error) {
@@ -161,6 +178,7 @@ export const MyFiles = () => {
     setGeneratedShareId(null);
     setCurrentFileName("");
     setCurrentExpiresAt(null);
+    setCurrentEncryptionKey("");
   };
 
   const deleteFile = async (id: string) => {
@@ -262,6 +280,7 @@ export const MyFiles = () => {
                         shareId={generatedShareId}
                         fileName={currentFileName}
                         expiresAt={currentExpiresAt}
+                        encryptionKey={currentEncryptionKey}
                       />
                     ) : (
                       <div className="space-y-4 py-4">
@@ -293,7 +312,7 @@ export const MyFiles = () => {
                           </Select>
                         </div>
                         <Button
-                          onClick={() => shareFile(file.id, file.file_name)}
+                          onClick={() => shareFile(file.id, file.file_name, file.encrypted_key)}
                           disabled={sharing}
                           className="w-full gap-2"
                         >
