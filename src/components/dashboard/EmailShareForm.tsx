@@ -76,7 +76,7 @@ export const EmailShareForm = ({
         .single();
 
       // Send email via edge function
-      const { error: emailError } = await supabase.functions.invoke("send-share-email", {
+      const { data: emailData, error: emailError } = await supabase.functions.invoke("send-share-email", {
         body: {
           recipientEmail: email,
           fileName,
@@ -88,6 +88,18 @@ export const EmailShareForm = ({
       });
 
       if (emailError) throw emailError;
+      
+      // Check for domain verification error from Resend
+      if (emailData?.needsDomainVerification) {
+        toast.error("Email domain not verified. In test mode, you can only send to your own email address.", {
+          duration: 6000,
+        });
+        throw new Error(emailData.error);
+      }
+      
+      if (emailData?.error) {
+        throw new Error(emailData.error);
+      }
 
       setSent(true);
       toast.success("Email sent successfully!");

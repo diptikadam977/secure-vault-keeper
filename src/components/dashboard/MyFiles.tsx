@@ -65,19 +65,26 @@ export const MyFiles = () => {
   };
 
   const getDecryptedKey = async (encryptedKey: string): Promise<string> => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) throw new Error("Not authenticated");
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) throw new Error("Not authenticated");
 
-    const privateKeyBase64 = getPrivateKey(userData.user.id);
-    if (!privateKeyBase64) {
-      throw new Error("Private key not found. Please generate your keys.");
+      const privateKeyBase64 = getPrivateKey(userData.user.id);
+      if (!privateKeyBase64) {
+        toast.error("Private key not found. Please go to Key Manager to generate your keys.");
+        throw new Error("Private key not found. Please generate your keys.");
+      }
+
+      const privateKey = await importPrivateKey(privateKeyBase64);
+      const aesKeyBuffer = await decryptKeyWithRSA(encryptedKey, privateKey);
+      
+      const keyArray = new Uint8Array(aesKeyBuffer);
+      return Array.from(keyArray).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (error) {
+      console.error("Key decryption error:", error);
+      toast.error("Failed to decrypt key. Please ensure you have valid encryption keys.");
+      throw error;
     }
-
-    const privateKey = await importPrivateKey(privateKeyBase64);
-    const aesKeyBuffer = await decryptKeyWithRSA(encryptedKey, privateKey);
-    
-    const keyArray = new Uint8Array(aesKeyBuffer);
-    return Array.from(keyArray).map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
   const downloadFile = async (file: EncryptedFile) => {

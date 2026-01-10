@@ -90,6 +90,33 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Email sent successfully:", emailResponse);
 
+    // Check if Resend returned an error (domain verification issue)
+    if (emailResponse.error) {
+      console.error("Resend API error:", emailResponse.error);
+      
+      // Check if it's a domain verification error
+      if (emailResponse.error.message?.includes("verify a domain")) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Email domain not verified. In test mode, you can only send to your own email. Please verify a domain at resend.com/domains to send to other recipients.",
+            needsDomainVerification: true
+          }),
+          {
+            status: 403,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ error: emailResponse.error.message }),
+        {
+          status: 400,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+
     return new Response(JSON.stringify({ success: true, data: emailResponse }), {
       status: 200,
       headers: {
