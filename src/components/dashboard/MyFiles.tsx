@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Download, Share2, Trash2, Loader2, FileText, QrCode } from "lucide-react";
+import { Download, Share2, Trash2, Loader2, FileText, QrCode, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { ShareQRCode } from "./ShareQRCode";
+import { ShareModeSelector, ShareMode } from "./ShareModeSelector";
+import { EmailShareForm } from "./EmailShareForm";
 import {
   importPrivateKey,
   getPrivateKey,
@@ -33,11 +35,13 @@ export const MyFiles = () => {
   const [expirationTime, setExpirationTime] = useState<string>("24h");
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [currentFileId, setCurrentFileId] = useState<string | null>(null);
+  const [currentFile, setCurrentFile] = useState<EncryptedFile | null>(null);
   const [generatedShareId, setGeneratedShareId] = useState<string | null>(null);
   const [currentFileName, setCurrentFileName] = useState<string>("");
   const [currentExpiresAt, setCurrentExpiresAt] = useState<string | null>(null);
   const [currentEncryptionKey, setCurrentEncryptionKey] = useState<string>("");
   const [sharing, setSharing] = useState(false);
+  const [shareMode, setShareMode] = useState<ShareMode | null>(null);
 
   useEffect(() => {
     loadFiles();
@@ -60,40 +64,47 @@ export const MyFiles = () => {
     }
   };
 
+  const getDecryptedKey = async (encryptedKey: string): Promise<string> => {
+    const { data: userData } = await supabase.auth.getUser();
+    if (!userData.user) throw new Error("Not authenticated");
+
+    const privateKeyBase64 = getPrivateKey(userData.user.id);
+    if (!privateKeyBase64) {
+      throw new Error("Private key not found. Please generate your keys.");
+    }
+
+    const privateKey = await importPrivateKey(privateKeyBase64);
+    const aesKeyBuffer = await decryptKeyWithRSA(encryptedKey, privateKey);
+    
+    const keyArray = new Uint8Array(aesKeyBuffer);
+    return Array.from(keyArray).map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
   const downloadFile = async (file: EncryptedFile) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
 
-      // Get private key from localStorage
       const privateKeyBase64 = getPrivateKey(userData.user.id);
       if (!privateKeyBase64) {
         toast.error("Private key not found. Please generate your keys.");
         return;
       }
 
-      // Import private key
       const privateKey = await importPrivateKey(privateKeyBase64);
-
-      // Decrypt AES key with RSA private key
       const aesKeyBuffer = await decryptKeyWithRSA(file.encrypted_key, privateKey);
       const aesKey = await importAESKey(aesKeyBuffer);
 
-      // Decode base64 encrypted data
       const encryptedBinary = atob(file.encrypted_data);
       const encryptedBytes = new Uint8Array(encryptedBinary.length);
       for (let i = 0; i < encryptedBinary.length; i++) {
         encryptedBytes[i] = encryptedBinary.charCodeAt(i);
       }
 
-      // Extract IV and encrypted data
       const iv = encryptedBytes.slice(0, 12);
       const data = encryptedBytes.slice(12);
-
-      // Decrypt file with AES
       const decryptedData = await decryptWithAES(data.buffer, aesKey, iv);
 
-      // Create and download file
       const blob = new Blob([decryptedData]);
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -111,28 +122,14 @@ export const MyFiles = () => {
     }
   };
 
-  const shareFile = async (fileId: string, fileName: string, encryptedKey: string) => {
+  const shareFileQR = async (file: EncryptedFile) => {
     setSharing(true);
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
 
-      // Get private key and decrypt the AES key to share
-      const privateKeyBase64 = getPrivateKey(userData.user.id);
-      if (!privateKeyBase64) {
-        toast.error("Private key not found. Please generate your keys.");
-        setSharing(false);
-        return;
-      }
+      const hexKey = await getDecryptedKey(file.encrypted_key);
 
-      const privateKey = await importPrivateKey(privateKeyBase64);
-      const aesKeyBuffer = await decryptKeyWithRSA(encryptedKey, privateKey);
-      
-      // Convert AES key to hex string for sharing
-      const keyArray = new Uint8Array(aesKeyBuffer);
-      const hexKey = Array.from(keyArray).map(b => b.toString(16).padStart(2, '0')).join('');
-
-      // Calculate expiration timestamp based on selection
       const now = new Date();
       let expiresAt: string | null = null;
       
@@ -144,9 +141,8 @@ export const MyFiles = () => {
         expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
       }
 
-      // Create share record with optional email
       const { data: shareData, error: shareError } = await supabase.from("file_shares").insert({
-        file_id: fileId,
+        file_id: file.id,
         shared_by: userData.user.id,
         shared_with_email: shareEmail || "public",
         encrypted_key: null,
@@ -155,9 +151,8 @@ export const MyFiles = () => {
 
       if (shareError) throw shareError;
 
-      // Set data for QR code display
       setGeneratedShareId(shareData.id);
-      setCurrentFileName(fileName);
+      setCurrentFileName(file.file_name);
       setCurrentExpiresAt(expiresAt);
       setCurrentEncryptionKey(hexKey);
 
@@ -173,12 +168,18 @@ export const MyFiles = () => {
   const resetShareDialog = () => {
     setShareDialogOpen(false);
     setCurrentFileId(null);
+    setCurrentFile(null);
     setShareEmail("");
     setExpirationTime("24h");
     setGeneratedShareId(null);
     setCurrentFileName("");
     setCurrentExpiresAt(null);
     setCurrentEncryptionKey("");
+    setShareMode(null);
+  };
+
+  const handleModeSelect = (mode: ShareMode) => {
+    setShareMode(mode);
   };
 
   const deleteFile = async (id: string) => {
@@ -255,23 +256,24 @@ export const MyFiles = () => {
                   if (open) {
                     setShareDialogOpen(true);
                     setCurrentFileId(file.id);
+                    setCurrentFile(file);
                   } else {
                     resetShareDialog();
                   }
                 }}>
                   <DialogTrigger asChild>
                     <Button size="sm" variant="outline" className="gap-1">
-                      <QrCode className="w-4 h-4" />
+                      <Share2 className="w-4 h-4" />
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="sm:max-w-md">
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2">
-                        <QrCode className="w-5 h-5" />
-                        Share via QR Code
+                        <Share2 className="w-5 h-5" />
+                        Share File
                       </DialogTitle>
                       <DialogDescription>
-                        Generate a QR code to share this encrypted file
+                        {file.file_name}
                       </DialogDescription>
                     </DialogHeader>
                     
@@ -282,8 +284,29 @@ export const MyFiles = () => {
                         expiresAt={currentExpiresAt}
                         encryptionKey={currentEncryptionKey}
                       />
-                    ) : (
-                      <div className="space-y-4 py-4">
+                    ) : shareMode === null ? (
+                      <ShareModeSelector onSelect={handleModeSelect} />
+                    ) : shareMode === "email" && currentFile ? (
+                      <EmailShareForm
+                        fileId={currentFile.id}
+                        fileName={currentFile.file_name}
+                        encryptedKey={currentFile.encrypted_key}
+                        onBack={() => setShareMode(null)}
+                        onSuccess={resetShareDialog}
+                        getDecryptedKey={() => getDecryptedKey(currentFile.encrypted_key)}
+                      />
+                    ) : shareMode === "qr" ? (
+                      <div className="space-y-4 py-4 animate-page-in">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShareMode(null)}
+                          className="gap-2 -ml-2"
+                        >
+                          <ArrowLeft className="w-4 h-4" />
+                          Back
+                        </Button>
+                        
                         <div className="space-y-2">
                           <Label htmlFor="email">Recipient Email (optional)</Label>
                           <Input
@@ -312,7 +335,7 @@ export const MyFiles = () => {
                           </Select>
                         </div>
                         <Button
-                          onClick={() => shareFile(file.id, file.file_name, file.encrypted_key)}
+                          onClick={() => currentFile && shareFileQR(currentFile)}
                           disabled={sharing}
                           className="w-full gap-2"
                         >
@@ -329,7 +352,7 @@ export const MyFiles = () => {
                           )}
                         </Button>
                       </div>
-                    )}
+                    ) : null}
                   </DialogContent>
                 </Dialog>
                 <Button
