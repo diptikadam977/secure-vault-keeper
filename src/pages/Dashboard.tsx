@@ -209,6 +209,8 @@ const Dashboard = () => {
                     </CardContent>
                   </Card>
 
+                  <QRScanner />
+
                   <Card 
                     className="shadow-card cursor-pointer hover:shadow-lg transition-all duration-300 border-accent/20 hover:border-accent/50"
                     onClick={() => navigate('/decrypt')}
@@ -229,8 +231,6 @@ const Dashboard = () => {
                       </Button>
                     </CardContent>
                   </Card>
-
-                  <QRScanner />
               </div>
               
               <div className="p-4 sm:p-6 bg-card rounded-2xl shadow-card border border-border">
