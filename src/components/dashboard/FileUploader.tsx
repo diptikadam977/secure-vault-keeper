@@ -104,9 +104,7 @@ export const FileUploader = () => {
     }
   };
 
-  return (
-    <Card className="bg-card shadow-card border-border">
-      
+  return;
 
 
 
@@ -115,39 +113,41 @@ export const FileUploader = () => {
 
 
 
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Input
-            type="file"
-            onChange={handleFileSelect}
-            accept="*/*"
-            className="cursor-pointer" />
 
-          {file &&
-          <p className="text-sm text-muted-foreground">
-              Selected: {file.name} ({(file.size / 1024).toFixed(2)} KB)
-            </p>
-          }
-        </div>
 
-        <Button
-          onClick={encryptAndUpload}
-          disabled={!file || loading}
-          className="w-full">
 
-          {loading ?
-          <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Encrypting...
-            </> :
 
-          <>
-              <Upload className="w-4 h-4" />
-              Encrypt & Upload
-            </>
-          }
-        </Button>
-      </CardContent>
-    </Card>);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 };
