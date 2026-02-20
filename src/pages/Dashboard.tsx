@@ -187,11 +187,7 @@ const Dashboard = () => {
             <TabsContent value="tools" className="space-y-4 sm:space-y-6">
               <KeyManager />
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <FileUploader />
-                
-                {/* Encrypt/Decrypt/Scanner Cards */}
-                <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <Card 
                     className="shadow-card cursor-pointer hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/50"
                     onClick={() => navigate('/encrypt')}
@@ -235,7 +231,6 @@ const Dashboard = () => {
                   </Card>
 
                   <QRScanner />
-                </div>
               </div>
               
               <div className="p-4 sm:p-6 bg-card rounded-2xl shadow-card border border-border">
