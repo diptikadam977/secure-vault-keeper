@@ -187,52 +187,58 @@ const Dashboard = () => {
             <TabsContent value="tools" className="space-y-4 sm:space-y-6">
               <KeyManager />
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 justify-items-center">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                  {/* Left: Large Encrypt Card */}
                   <Card 
-                    className="w-full shadow-card cursor-pointer hover:shadow-lg transition-all duration-300 border-primary/20 hover:border-primary/50"
+                    className="w-full cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl rounded-2xl border border-white/20 bg-gradient-to-br from-blue-500/15 via-purple-500/10 to-indigo-500/15 backdrop-blur-xl shadow-[0_8px_32px_rgba(99,102,241,0.12)] dark:from-blue-500/10 dark:via-purple-500/8 dark:to-indigo-500/10 dark:shadow-[0_8px_32px_rgba(99,102,241,0.2)]"
                     onClick={() => navigate('/encrypt')}
                   >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <Lock className="w-5 h-5 text-primary" />
-                        Encrypt File
-                      </CardTitle>
-                      <CardDescription>
-                        Encrypt files with AES-256-GCM encryption
+                    <CardHeader className="pb-4 pt-8 px-8">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-4 shadow-lg shadow-blue-500/25">
+                        <Lock className="w-7 h-7 text-white" />
+                      </div>
+                      <CardTitle className="text-2xl text-foreground">Encrypt File</CardTitle>
+                      <CardDescription className="text-base mt-1">
+                        Protect your files with military-grade AES-256-GCM encryption. Your data stays private and secure.
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
-                      <Button className="w-full gap-2 bg-gradient-primary" variant="glow">
-                        <Lock className="w-4 h-4" />
-                        Go to Encrypt
+                    <CardContent className="px-8 pb-8">
+                      <Button className="w-full gap-2 h-12 text-base rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white border-0 shadow-lg shadow-blue-500/20 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/25">
+                        <Lock className="w-5 h-5" />
+                        Start Encrypting
                       </Button>
                     </CardContent>
                   </Card>
 
-                  <div className="w-full sm:col-span-2 lg:col-span-1 sm:max-w-sm sm:mx-auto lg:max-w-none">
-                    <QRScanner />
+                  {/* Right: Two stacked cards */}
+                  <div className="flex flex-col gap-5">
+                    {/* Decrypt Card */}
+                    <Card 
+                      className="w-full flex-1 cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl rounded-2xl border border-white/20 bg-gradient-to-br from-indigo-500/15 via-violet-500/10 to-purple-500/15 backdrop-blur-xl shadow-[0_8px_32px_rgba(139,92,246,0.12)] dark:from-indigo-500/10 dark:via-violet-500/8 dark:to-purple-500/10 dark:shadow-[0_8px_32px_rgba(139,92,246,0.2)]"
+                      onClick={() => navigate('/decrypt')}
+                    >
+                      <CardHeader className="pb-3 pt-6 px-6">
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mb-3 shadow-lg shadow-indigo-500/25">
+                          <Unlock className="w-5 h-5 text-white" />
+                        </div>
+                        <CardTitle className="text-lg text-foreground">Decrypt File</CardTitle>
+                        <CardDescription>
+                          Unlock and restore your encrypted files securely
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="px-6 pb-6">
+                        <Button className="w-full gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white border-0 shadow-md shadow-indigo-500/20 transition-all duration-300 hover:shadow-lg">
+                          <Unlock className="w-4 h-4" />
+                          Go to Decrypt
+                        </Button>
+                      </CardContent>
+                    </Card>
+
+                    {/* QR Scanner Card */}
+                    <div className="w-full flex-1 [&>div]:h-full [&>div]:rounded-2xl [&>div]:border-white/20 [&>div]:bg-gradient-to-br [&>div]:from-purple-500/15 [&>div]:via-fuchsia-500/10 [&>div]:to-pink-500/15 [&>div]:backdrop-blur-xl [&>div]:shadow-[0_8px_32px_rgba(168,85,247,0.12)] dark:[&>div]:from-purple-500/10 dark:[&>div]:via-fuchsia-500/8 dark:[&>div]:to-pink-500/10 dark:[&>div]:shadow-[0_8px_32px_rgba(168,85,247,0.2)]">
+                      <QRScanner />
+                    </div>
                   </div>
-
-                  <Card 
-                    className="w-full shadow-card cursor-pointer hover:shadow-lg transition-all duration-300 border-accent/20 hover:border-accent/50"
-                    onClick={() => navigate('/decrypt')}
-                  >
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <Unlock className="w-5 h-5 text-accent" />
-                        Decrypt File
-                      </CardTitle>
-                      <CardDescription>
-                        Decrypt your encrypted files with key
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <Button className="w-full gap-2 bg-accent hover:bg-accent/90">
-                        <Unlock className="w-4 h-4" />
-                        Go to Decrypt
-                      </Button>
-                    </CardContent>
-                  </Card>
               </div>
               
               <div className="p-4 sm:p-6 bg-card rounded-2xl shadow-card border border-border">
