@@ -7,8 +7,13 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Clear any stale/corrupted session first, then check for valid session
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      if (error) {
+        // Stale session - sign out to clear corrupted tokens
+        supabase.auth.signOut();
+        return;
+      }
       if (session) {
         navigate("/dashboard");
       }
@@ -16,7 +21,7 @@ const Auth = () => {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (event === "SIGNED_IN" && session) {
         navigate("/dashboard");
       }
     });

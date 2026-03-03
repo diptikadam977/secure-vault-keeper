@@ -58,6 +58,9 @@ export const AuthForm = () => {
     setLoading(true);
 
     try {
+      // Clear any stale session before signing in
+      await supabase.auth.signOut();
+      
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -68,7 +71,12 @@ export const AuthForm = () => {
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in");
+      const msg = error.message || "Failed to sign in";
+      if (msg === "Failed to fetch") {
+        toast.error("Network error. Please check your connection and try again.");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setLoading(false);
     }
