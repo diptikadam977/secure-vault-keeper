@@ -82,6 +82,50 @@ export type Database = {
           },
         ]
       }
+      flashcards: {
+        Row: {
+          back: string
+          created_at: string
+          deck_id: string
+          difficulty: number
+          front: string
+          id: string
+          next_review: string | null
+          review_count: number
+          user_id: string
+        }
+        Insert: {
+          back: string
+          created_at?: string
+          deck_id: string
+          difficulty?: number
+          front: string
+          id?: string
+          next_review?: string | null
+          review_count?: number
+          user_id: string
+        }
+        Update: {
+          back?: string
+          created_at?: string
+          deck_id?: string
+          difficulty?: number
+          front?: string
+          id?: string
+          next_review?: string | null
+          review_count?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flashcards_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "study_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -108,6 +152,121 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      study_decks: {
+        Row: {
+          card_count: number
+          created_at: string
+          description: string | null
+          id: string
+          subject: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          card_count?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          subject?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          card_count?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          subject?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      study_notes: {
+        Row: {
+          content: string
+          created_at: string
+          deck_id: string | null
+          id: string
+          summary: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          deck_id?: string | null
+          id?: string
+          summary?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          deck_id?: string | null
+          id?: string
+          summary?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_notes_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "study_decks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      study_sessions: {
+        Row: {
+          cards_studied: number
+          correct_answers: number
+          created_at: string
+          deck_id: string | null
+          duration_seconds: number
+          id: string
+          session_type: string
+          user_id: string
+        }
+        Insert: {
+          cards_studied?: number
+          correct_answers?: number
+          created_at?: string
+          deck_id?: string | null
+          duration_seconds?: number
+          id?: string
+          session_type?: string
+          user_id: string
+        }
+        Update: {
+          cards_studied?: number
+          correct_answers?: number
+          created_at?: string
+          deck_id?: string | null
+          duration_seconds?: number
+          id?: string
+          session_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_sessions_deck_id_fkey"
+            columns: ["deck_id"]
+            isOneToOne: false
+            referencedRelation: "study_decks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_keys: {
         Row: {
