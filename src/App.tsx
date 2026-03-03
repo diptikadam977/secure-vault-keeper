@@ -12,6 +12,7 @@ import DownloadShare from "./pages/DownloadShare";
 import Encrypt from "./pages/Encrypt";
 import Decrypt from "./pages/Decrypt";
 import NotFound from "./pages/NotFound";
+import PawCare from "./pages/PawCare";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ const AnimatedRoutes = () => {
         <Route path="/encrypt" element={<Encrypt />} />
         <Route path="/decrypt" element={<Decrypt />} />
         <Route path="/download/:shareId" element={<DownloadShare />} />
+        <Route path="/pawcare" element={<PawCare />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
         <Route path="*" element={<NotFound />} />
       </Routes>
