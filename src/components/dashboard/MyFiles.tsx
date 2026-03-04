@@ -66,6 +66,12 @@ export const MyFiles = () => {
 
   const getDecryptedKey = async (encryptedKey: string): Promise<string> => {
     try {
+      // Check if the key is already a plain hex string (64 hex chars = 32 bytes AES-256)
+      if (/^[0-9a-f]{64}$/i.test(encryptedKey)) {
+        return encryptedKey;
+      }
+
+      // Otherwise, try RSA decryption
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Not authenticated");
 
