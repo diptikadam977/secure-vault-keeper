@@ -66,14 +66,19 @@ export const QRScanner = () => {
     try {
       const parsed = new URL(url);
       const path = parsed.pathname;
-      const match = path.match(/^\/download\/(.+)$/);
+      const match = path.match(/\/download\/(.+)$/);
       if (match) {
         shareId = match[1];
       }
     } catch {
-      // Not a valid URL – try raw string as share ID
+      // Not a valid URL – try raw string as share ID (UUID format)
       if (/^[0-9a-f-]{36}$/i.test(url)) {
         shareId = url;
+      }
+      // Also try if it's a relative path like /download/uuid
+      const relMatch = url.match(/\/download\/(.+)$/);
+      if (relMatch) {
+        shareId = relMatch[1];
       }
     }
 
