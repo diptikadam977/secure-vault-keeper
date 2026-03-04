@@ -79,7 +79,32 @@ export const FileEncryptor = () => {
       combined.set(iv, 0);
       combined.set(new Uint8Array(encryptedData), iv.length);
 
-      // Create download
+      // Convert to base64 for storage
+      let binary = "";
+      const chunkSize = 0x8000;
+      for (let i = 0; i < combined.length; i += chunkSize) {
+        const chunk = combined.subarray(i, i + chunkSize);
+        binary += String.fromCharCode(...chunk);
+      }
+      const encryptedBase64 = btoa(binary);
+
+      // Save to database (My Vault)
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user) {
+        const { error: dbError } = await supabase.from("encrypted_files").insert({
+          user_id: userData.user.id,
+          file_name: file.name,
+          file_size: file.size,
+          encrypted_key: encryptionKey,
+          encrypted_data: encryptedBase64,
+        });
+        if (dbError) {
+          console.error("DB save error:", dbError);
+          toast.error("File encrypted but failed to save to vault");
+        }
+      }
+
+      // Also create download
       const blob = new Blob([combined], { type: "application/octet-stream" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -89,7 +114,7 @@ export const FileEncryptor = () => {
       URL.revokeObjectURL(url);
       
       setProgress(100);
-      toast.success("File encrypted successfully!");
+      toast.success("File encrypted and saved to vault!");
     } catch (error) {
       console.error("Encryption error:", error);
       toast.error("Failed to encrypt file");
