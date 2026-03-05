@@ -213,7 +213,7 @@ const Dashboard = () => {
                 {/* Stats row */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { label: "Total Saved Items", value: totalFiles !== null ? String(totalFiles) : "—", icon: FileKey, gradient: "from-primary to-primary-glow" },
+                    { label: "Encrypted Files", value: totalFiles !== null ? String(totalFiles) : "—", icon: FileKey, gradient: "from-primary to-primary-glow" },
                     { label: "Recent Activity", value: "Active", icon: Activity, gradient: "from-emerald-500 to-teal-500" },
                     { label: "Security Status", value: "Protected", icon: Shield, gradient: "from-primary-glow to-purple-600" },
                   ].map((stat, i) => (
