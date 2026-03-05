@@ -72,12 +72,19 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background flex relative">
       {/* Square grid background */}
-      <div className="fixed inset-0 opacity-[0.06] pointer-events-none" style={{
+      <div className="fixed inset-0 opacity-[0.08] pointer-events-none" style={{
         backgroundImage: `
           linear-gradient(hsl(var(--primary) / 0.4) 1px, transparent 1px),
           linear-gradient(90deg, hsl(var(--primary) / 0.4) 1px, transparent 1px)
         `,
-        backgroundSize: '40px 40px',
+        backgroundSize: '80px 80px',
+      }} />
+      <div className="fixed inset-0 opacity-[0.04] pointer-events-none" style={{
+        backgroundImage: `
+          linear-gradient(hsl(var(--primary) / 0.2) 1px, transparent 1px),
+          linear-gradient(90deg, hsl(var(--primary) / 0.2) 1px, transparent 1px)
+        `,
+        backgroundSize: '20px 20px',
       }} />
       {/* ───── Desktop Sidebar ───── */}
       <aside className={`hidden md:flex flex-col border-r border-border/50 glass-strong transition-all duration-300 ${sidebarOpen ? "w-64" : "w-20"} shrink-0`}>

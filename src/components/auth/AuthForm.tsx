@@ -19,14 +19,14 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => (
         linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px),
         linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)
       `,
-      backgroundSize: '40px 40px',
+      backgroundSize: '80px 80px',
     }} />
     <div className="absolute inset-0 opacity-8" style={{
       backgroundImage: `
         linear-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px),
         linear-gradient(90deg, hsl(var(--primary) / 0.15) 1px, transparent 1px)
       `,
-      backgroundSize: '10px 10px',
+      backgroundSize: '20px 20px',
     }} />
     
     <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[120px]" />
