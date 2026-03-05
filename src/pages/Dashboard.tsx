@@ -30,7 +30,18 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("tools");
+  const [totalFiles, setTotalFiles] = useState<number | null>(null);
   const { profile } = useProfile();
+
+  useEffect(() => {
+    const fetchFileCount = async () => {
+      const { count, error } = await supabase
+        .from("encrypted_files")
+        .select("*", { count: "exact", head: true });
+      if (!error) setTotalFiles(count ?? 0);
+    };
+    if (user) fetchFileCount();
+  }, [user]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
