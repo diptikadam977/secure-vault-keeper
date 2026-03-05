@@ -13,21 +13,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 overflow-hidden">
     <div className="absolute inset-0 bg-background" />
     
-    {/* Square grid pattern background */}
-    <div className="absolute inset-0 opacity-15" style={{
-      backgroundImage: `
-        linear-gradient(hsl(var(--primary) / 0.3) 1px, transparent 1px),
-        linear-gradient(90deg, hsl(var(--primary) / 0.3) 1px, transparent 1px)
-      `,
-      backgroundSize: '80px 80px',
-    }} />
-    <div className="absolute inset-0 opacity-8" style={{
-      backgroundImage: `
-        linear-gradient(hsl(var(--primary) / 0.15) 1px, transparent 1px),
-        linear-gradient(90deg, hsl(var(--primary) / 0.15) 1px, transparent 1px)
-      `,
-      backgroundSize: '20px 20px',
-    }} />
+    
     
     <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-primary/8 rounded-full blur-[120px]" />
     <div className="absolute bottom-0 left-0 w-[400px] h-[300px] bg-primary-glow/5 rounded-full blur-[100px]" />
