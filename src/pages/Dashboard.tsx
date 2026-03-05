@@ -30,7 +30,18 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("tools");
+  const [totalFiles, setTotalFiles] = useState<number | null>(null);
   const { profile } = useProfile();
+
+  useEffect(() => {
+    const fetchFileCount = async () => {
+      const { count, error } = await supabase
+        .from("encrypted_files")
+        .select("*", { count: "exact", head: true });
+      if (!error) setTotalFiles(count ?? 0);
+    };
+    if (user) fetchFileCount();
+  }, [user]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -202,7 +213,7 @@ const Dashboard = () => {
                 {/* Stats row */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
-                    { label: "Total Saved Items", value: "—", icon: FileKey, gradient: "from-primary to-primary-glow" },
+                    { label: "Total Saved Items", value: totalFiles !== null ? String(totalFiles) : "—", icon: FileKey, gradient: "from-primary to-primary-glow" },
                     { label: "Recent Activity", value: "Active", icon: Activity, gradient: "from-emerald-500 to-teal-500" },
                     { label: "Security Status", value: "Protected", icon: Shield, gradient: "from-primary-glow to-purple-600" },
                   ].map((stat, i) => (
