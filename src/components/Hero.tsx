@@ -25,8 +25,8 @@ export const Hero = () => {
           <Button
             variant="outline"
             className="border-border/50 text-foreground hover:bg-primary/10 hover:border-primary/50"
-            onClick={() => navigate("/auth")}
-          >
+            onClick={() => navigate("/auth")}>
+            
             Sign In
           </Button>
         </div>
@@ -65,56 +65,56 @@ export const Hero = () => {
             <Button
               size="lg"
               className="bg-gradient-primary text-primary-foreground hover:shadow-glow transition-all duration-300 text-base sm:text-lg px-8 py-6 h-auto btn-glow rounded-xl"
-              onClick={() => navigate("/auth")}
-            >
+              onClick={() => navigate("/auth")}>
+              
               <Lock className="w-5 h-5 mr-2" />
               Get Started Free
             </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-border/50 text-foreground hover:bg-primary/10 hover:border-primary/50 text-base sm:text-lg px-8 py-6 h-auto rounded-xl transition-all duration-300"
-              onClick={() => navigate("/auth")}
-            >
-              <Key className="w-5 h-5 mr-2" />
-              Sign In
-            </Button>
+            
+
+
+
+
+
+
+
+            
           </div>
 
           {/* Features */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 mt-8 px-2">
             {[
-              {
-                icon: ShieldCheck,
-                title: "AES-256 Encryption",
-                description: "Military-grade encryption protects your files with unbreakable security",
-              },
-              {
-                icon: Eye,
-                title: "Zero-Knowledge",
-                description: "Your private keys never leave your device — we can't see your data",
-              },
-              {
-                icon: Fingerprint,
-                title: "Easy Key Management",
-                description: "Generate and store RSA-2048 keys with one click",
-              },
-            ].map((feature, index) => (
-              <div
-                key={index}
-                className="group glass p-6 rounded-2xl hover:shadow-glow hover:-translate-y-1 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
-                style={{ animationDelay: `${600 + index * 100}ms` }}
-              >
+            {
+              icon: ShieldCheck,
+              title: "AES-256 Encryption",
+              description: "Military-grade encryption protects your files with unbreakable security"
+            },
+            {
+              icon: Eye,
+              title: "Zero-Knowledge",
+              description: "Your private keys never leave your device — we can't see your data"
+            },
+            {
+              icon: Fingerprint,
+              title: "Easy Key Management",
+              description: "Generate and store RSA-2048 keys with one click"
+            }].
+            map((feature, index) =>
+            <div
+              key={index}
+              className="group glass p-6 rounded-2xl hover:shadow-glow hover:-translate-y-1 transition-all duration-300 animate-in fade-in slide-in-from-bottom-4"
+              style={{ animationDelay: `${600 + index * 100}ms` }}>
+              
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-primary rounded-xl mb-4 group-hover:shadow-glow transition-all duration-300">
                   <feature.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">{feature.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">{feature.description}</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
-    </div>
-  );
+    </div>);
+
 };
